@@ -39,6 +39,7 @@ var addressVal = address{Name: "", Number: ""}
 type config struct {
 	Username string
 	Password string
+	Phone    string
 	Secret   string
 }
 
@@ -397,7 +398,8 @@ func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	form := url.Values{}
 	//form.Add("To", "+4993168085504")
-	form.Add("To", "+49931783455")
+	//form.Add("To", "+49931783455")
+	form.Add("To", c.Phone)
 	form.Add("From", "+4993161569016")
 	form.Add("MediaUrl", "http://pizza.raytracer.me/pdf")
 	form.Add("StatusCallback", "http://pizza.raytracer.me/updateStatus")
