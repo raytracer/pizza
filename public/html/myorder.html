@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Pizza-Bestellungen</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script
+              src="https://code.jquery.com/jquery-3.1.1.min.js"
+              integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+              crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+        <style>
+h2 {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+            <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="/">Pizza</a>
+        </nav>
+        <div class="container">
+            <h2>Meine Bestellung</h2>
+            <h4>Name/Pseudonym</h4>
+            <p>{{ .Name }}</p>
+            <h4>Bestellnummer</h4>
+            <p>{{ .Id }}</p>
+            <h4>Pizzen</h4>
+            <p>{{ .OrderItems }}</p>
+            <h4>Bezahlt?</h4>
+            <p>{{ .ShowIsPayed }}</p>
+            <h4>Preis</h4>
+            <p>{{ .CalcPrice }} €</p>
+        </div>
+    </body>
+</html>

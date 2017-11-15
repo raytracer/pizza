@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Pizza-Bestellungen</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script
+              src="https://code.jquery.com/jquery-3.1.1.min.js"
+              integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+              crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+        <style>
+#order {
+    width: 100%;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+}
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+            <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="/">Pizza</a>
+        </nav>
+        <div class="container">
+            <div class="row">
+                <a id="order" class="btn btn-primary" href="/order" role="button">Bestellen</a>
+                <h3>Alle Bestellungen</h3>
+                <table class="table">
+                    <thead class="thead-inverse">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Inhalt</th>
+                            <th>Bezahlt?</th>
+                            <th>Preis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ range $index, $element := . }}
+                        <tr {{ if eq $element.IsPayed true }} class="bg-success" {{ end }}>
+                            <th scope="row">{{ $element.Id }}</th>
+                            <td>{{ $element.Name }}</td>
+                            <td>{{ $element.OrderItems }}</td>
+                            <td>{{ $element.ShowIsPayed }}</td>
+                            <td>{{ $element.CalcPrice }} €</td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
