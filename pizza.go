@@ -17,13 +17,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gorilla/securecookie"
 	"github.com/julienschmidt/httprouter"
 	"github.com/jung-kurt/gofpdf"
 )
 
 var funcMap = template.FuncMap{
 	"CompletePrice": CompletePrice,
+	"Secret":        Secret,
 }
 
 var overview, _ = template.ParseFiles("public/html/index.html")
@@ -88,6 +88,10 @@ func CompletePrice() string {
 	return FormatPrice(price)
 }
 
+func Secret() string {
+	return c.Secret
+}
+
 func (o order) OrderItems() string {
 	names := []string{}
 
@@ -141,10 +145,6 @@ type changePayed struct {
 type deleteOrder struct {
 	Id int
 }
-
-var hashKey = []byte("very-secret")
-var blockKey = []byte("hURFbQRNBdN78ESAU7wdCbVeBGr5O29M")
-var s = securecookie.New(hashKey, blockKey)
 
 type gzipResponseWriter struct {
 	io.Writer
@@ -376,9 +376,6 @@ func Pdf(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			pdf.Ln(5)
 		}
 	}
-
-	// Output justified text
-	//pdf.MultiCell(0, 8, tr(pizzaTxt), "", "", false)
 
 	pdf.Output(w)
 }

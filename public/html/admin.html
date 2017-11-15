@@ -12,6 +12,7 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
     <script type="text/javascript">
 $(document).ready(function() {
+    var secret = "{{ Secret }}";
     $("tbody tr").each(function() {
         var elem = $(this);
         var checkbox = elem.find("input");
@@ -24,7 +25,7 @@ $(document).ready(function() {
             elem.toggleClass("bg-success");
 
             $.ajax({
-                url: '/adminhURFbQRNBdN78',
+                url: '/admin' + secret,
                 type: 'POST',
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify({"Id": +id, "IsPayed": this.checked})
@@ -33,7 +34,7 @@ $(document).ready(function() {
 
         deleteButton.click(function() {
             $.ajax({
-                url: '/deleteOrderhURFbQRNBdN78',
+                url: '/deleteOrder' + secret,
                 type: 'POST',
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify({"Id": +id})
@@ -46,7 +47,7 @@ $(document).ready(function() {
     $("form").submit(function (e) {
         e.preventDefault();
         $.ajax({
-            url: '/faxorderhURFbQRNBdN78',
+            url: '/faxorder' + secret,
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify({ "Name": $("#nameField").val(), "Number": $("#numberField").val()}),
