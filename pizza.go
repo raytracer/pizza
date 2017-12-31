@@ -397,12 +397,10 @@ func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	client := &http.Client{}
 
 	form := url.Values{}
-	//form.Add("To", "+4993168085504")
-	//form.Add("To", "+49931783455")
 	form.Add("To", c.Phone)
 	form.Add("From", "+4993161569016")
-	form.Add("MediaUrl", "http://pizza.raytracer.me/pdf")
-	form.Add("StatusCallback", "http://pizza.raytracer.me/updateStatus")
+	form.Add("MediaUrl", "https://pizza.raytracer.me/pdf")
+	form.Add("StatusCallback", "http://pizzas.raytracer.me/updateStatus")
 
 	req, err := http.NewRequest("POST", "https://fax.twilio.com/v1/Faxes", strings.NewReader(form.Encode()))
 
@@ -434,11 +432,6 @@ func UpdateStatus(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func main() {
-	port := "8080"
-	if len(os.Args) > 1 {
-		port = os.Args[1]
-	}
-
 	raw, err := ioutil.ReadFile("./config.json")
 	if err != nil {
 		fmt.Println(err.Error())
@@ -469,6 +462,7 @@ func main() {
 	router.POST("/updateStatus", makeGzipHandler(UpdateStatus))
 	router.GET("/public/*filepath", makeGzipHandler(ServeStatic))
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
-
+	log.Fatal(http.ListenAndServeTLS(":443", "/etc/letsencrypt/live/pizza.raytracer.me/fullchain.pem", "/etc/letsencrypt/live/pizza.raytracer.me/privkey.pem", router))
+	//No HSTS for now, Pull Requests are welcome
+	log.Fatal(http.ListenAndServe(":80", router))
 }
