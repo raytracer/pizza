@@ -1,7 +1,6 @@
 package main
 
 import (
-	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -10,15 +9,19 @@ import (
 	"log"
 	"mime"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/julienschmidt/httprouter"
 	"github.com/jung-kurt/gofpdf"
+	uuid "github.com/satori/go.uuid"
 )
 
 var funcMap = template.FuncMap{
@@ -32,9 +35,12 @@ var orderTemplate, _ = template.ParseFiles("public/html/order.html")
 var myOrderTemplate, _ = template.ParseFiles("public/html/myorder.html")
 
 var mutex = &sync.Mutex{}
-var orders = []order{}
-var orderNr = 1
-var addressVal = address{Name: "", Number: ""}
+
+var sess, err = session.NewSession(&aws.Config{
+	Region:      aws.String("eu-central-1"),
+	Credentials: credentials.NewSharedCredentials("credentials", "dynamodb"),
+})
+var svc = dynamodb.New(sess)
 
 type config struct {
 	Username string
@@ -46,13 +52,14 @@ type config struct {
 var c config
 
 type order struct {
-	Id      int
+	Id      string
 	Name    string
 	Items   []orderItem
 	IsPayed bool
 }
 
 type address struct {
+	Id     string
 	Name   string
 	Number string
 }
@@ -81,6 +88,7 @@ func FormatPrice(price int) string {
 
 func CompletePrice() string {
 	price := 0
+	orders := getOrders()
 
 	for _, o := range orders {
 		price += o.CalcPriceValue()
@@ -139,12 +147,12 @@ type extra struct {
 }
 
 type changePayed struct {
-	Id      int
+	Id      string
 	IsPayed bool
 }
 
 type deleteOrder struct {
-	Id int
+	Id string
 }
 
 type gzipResponseWriter struct {
@@ -154,20 +162,6 @@ type gzipResponseWriter struct {
 
 func (w gzipResponseWriter) Write(b []byte) (int, error) {
 	return w.Writer.Write(b)
-}
-
-func makeGzipHandler(fn httprouter.Handle) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-			fn(w, r, params)
-			return
-		}
-		w.Header().Set("Content-Encoding", "gzip")
-		gz := gzip.NewWriter(w)
-		defer gz.Close()
-		gzr := gzipResponseWriter{Writer: gz, ResponseWriter: w}
-		fn(gzr, r, params)
-	}
 }
 
 //TODO yes ugly hack, but I did not want to rewrite the entire extra code
@@ -194,30 +188,45 @@ func ServeStatic(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 func Index(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "text/html")
 
+	orders := getOrders()
 	overview.Execute(w, orders)
 }
 
 func MyOrder(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "text/html")
 
-	i, err := strconv.Atoi(ps.ByName("order"))
+	id := ps.ByName("order")
 
-	if err == nil && i >= 0 {
-		for _, order := range orders {
-			if order.Id == i {
-				myOrderTemplate.Execute(w, order)
-			}
-		}
+	params := &dynamodb.GetItemInput{
+		TableName: aws.String("Orders"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"Id": {
+				S: aws.String(id),
+			},
+		},
 	}
+
+	resp, err := svc.GetItem(params)
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err.Error())
+		return
+	}
+
+	var order order
+	err = dynamodbattribute.UnmarshalMap(resp.Item, &order)
+
+	myOrderTemplate.Execute(w, order)
 }
 
 func Admin(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "text/html")
+	orders := getOrders()
 	admin.Execute(w, orders)
 }
 
 func Order(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "text/html")
+	orders := getOrders()
 	orderTemplate.Execute(w, orders)
 }
 
@@ -233,10 +242,26 @@ func ChangePayed(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	defer r.Body.Close()
 
-	for i := 0; i < len(orders); i++ {
-		if orders[i].Id == t.Id {
-			orders[i].IsPayed = t.IsPayed
-		}
+	params := &dynamodb.UpdateItemInput{
+		TableName: aws.String("Orders"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"Id": {
+				S: aws.String(t.Id),
+			},
+		},
+		UpdateExpression: aws.String("set IsPayed = :IsPayed"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":IsPayed": {
+				BOOL: aws.Bool(t.IsPayed),
+			},
+		},
+	}
+
+	// update the item
+	_, err = svc.UpdateItem(params)
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err.Error())
+		return
 	}
 }
 
@@ -252,16 +277,21 @@ func DeleteOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	defer r.Body.Close()
 
-	toBeDeleted := -1
-
-	for i := 0; i < len(orders); i++ {
-		if orders[i].Id == t.Id {
-			toBeDeleted = i
-		}
+	// create the api params
+	params := &dynamodb.DeleteItemInput{
+		TableName: aws.String("Orders"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"Id": {
+				S: aws.String(t.Id),
+			},
+		},
 	}
 
-	if toBeDeleted > -1 {
-		orders = append(orders[:toBeDeleted], orders[toBeDeleted+1:]...)
+	// delete the item
+	_, err = svc.DeleteItem(params)
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err.Error())
+		return
 	}
 }
 
@@ -278,9 +308,25 @@ func SendOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	t.IsPayed = false
 	mutex.Lock()
 
-	t.Id = orderNr
-	orderNr++
-	orders = append(orders, t)
+	t.Id = uuid.Must(uuid.NewV4()).String()
+	orderAVMap, err := dynamodbattribute.MarshalMap(t)
+	if err != nil {
+		panic("Cannot marshal order into AttributeValue map")
+	}
+
+	// create the api params
+	params := &dynamodb.PutItemInput{
+		TableName: aws.String("Orders"),
+		Item:      orderAVMap,
+	}
+
+	// put the item
+	resp, err := svc.PutItem(params)
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err.Error())
+		return
+	}
+	fmt.Println(resp)
 
 	mutex.Unlock()
 
@@ -345,6 +391,85 @@ func Items(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	json.NewEncoder(w).Encode([]menuItem{pizza1, pizza2, pizza3, pizza4, pizza5, pizza6, pizza7, pizza8, pizza9, pizza10, pizza11, pizza12, pizza13, pizza14, pizza15, pizza16})
 }
 
+func getAddress() address {
+	params := &dynamodb.GetItemInput{
+		TableName: aws.String("Addresses"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"Id": {
+				N: aws.String("1"),
+			},
+		},
+	}
+
+	resp, err := svc.GetItem(params)
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err.Error())
+	}
+
+	var address address
+	err = dynamodbattribute.UnmarshalMap(resp.Item, &address)
+
+	return address
+}
+
+func setAddress(address address) {
+	params := &dynamodb.UpdateItemInput{
+		TableName: aws.String("Addresses"),
+		Key: map[string]*dynamodb.AttributeValue{
+			"Id": {
+				N: aws.String("1"),
+			},
+		},
+		UpdateExpression: aws.String("set #n1 = :Name, #n2 = :Number"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":Name": {
+				S: aws.String(address.Name),
+			},
+			":Number": {
+				S: aws.String(address.Number),
+			},
+		},
+		ExpressionAttributeNames: map[string]*string{
+			"#n1": aws.String("Name"),
+			"#n2": aws.String("Number"),
+		},
+	}
+
+	_, err = svc.UpdateItem(params)
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err.Error())
+		return
+	}
+}
+
+func getOrders() []order {
+	// create the api params
+	params := &dynamodb.ScanInput{
+		TableName: aws.String("Orders"),
+	}
+
+	orders := make([]order, 0)
+
+	err := svc.ScanPages(params, func(page *dynamodb.ScanOutput, lastPage bool) bool {
+		var orderPage []order
+		err := dynamodbattribute.UnmarshalListOfMaps(page.Items, &orderPage)
+		if err != nil {
+			// print the error and continue receiving pages
+			fmt.Printf("\nCould not unmarshal AWS data: err = %v\n", err)
+			return true
+		}
+
+		orders = append(orders, orderPage...)
+
+		return true
+	})
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err.Error())
+	}
+
+	return orders
+}
+
 func Pdf(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/pdf")
 
@@ -355,13 +480,15 @@ func Pdf(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	tr := pdf.UnicodeTranslatorFromDescriptor("")
 
+	addressVal := getAddress()
+
 	message := "Treffpunkt 8 (blaues Schild) / Parkplatz Informatik, bitte anrufen wenn da, wir kommen dann raus"
 	addressTxt := fmt.Sprintf("%s\nTheodor-Boveri-Weg\n97074 Würzburg\n%s\n\nBemerkung:\n%s\n\nZahlung: Bar\n\n", addressVal.Name, addressVal.Number, message)
 
 	pdf.MultiCell(0, 8, tr(addressTxt), "", "", false)
 
 	// if only go would be functional ...
-	for _, o := range orders {
+	for _, o := range getOrders() {
 		for _, item := range o.Items {
 			pizzaName := item.Name + " (" + item.Size.Name + ") "
 			pdf.SetFont("Times", "B", 16)
@@ -392,34 +519,34 @@ func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
-	addressVal = address
+	setAddress(address)
 
-	client := &http.Client{}
+	//client := &http.Client{}
 
-	form := url.Values{}
-	form.Add("To", c.Phone)
-	form.Add("From", "+4993161569016")
-	form.Add("MediaUrl", "https://pizza.raytracer.me/pdf")
-	form.Add("StatusCallback", "http://pizzas.raytracer.me/updateStatus")
+	//form := url.Values{}
+	//form.Add("To", c.Phone)
+	//form.Add("From", "+4993161569016")
+	//form.Add("MediaUrl", "https://pizza.raytracer.me/pdf")
+	//form.Add("StatusCallback", "http://pizzas.raytracer.me/updateStatus")
 
-	req, err := http.NewRequest("POST", "https://fax.twilio.com/v1/Faxes", strings.NewReader(form.Encode()))
+	//req, err := http.NewRequest("POST", "https://fax.twilio.com/v1/Faxes", strings.NewReader(form.Encode()))
 
-	if err != nil {
-		json.NewEncoder(w).Encode(false)
-		return
-	}
+	//if err != nil {
+	//	json.NewEncoder(w).Encode(false)
+	//	return
+	//}
 
-	req.SetBasicAuth(c.Username, c.Password)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	//req.SetBasicAuth(c.Username, c.Password)
+	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := client.Do(req)
-	if err != nil {
-		json.NewEncoder(w).Encode(false)
-		return
-	}
+	//resp, err := client.Do(req)
+	//if err != nil {
+	//	json.NewEncoder(w).Encode(false)
+	//	return
+	//}
 
-	bodyText, err := ioutil.ReadAll(resp.Body)
-	println(string(bodyText))
+	//bodyText, err := ioutil.ReadAll(resp.Body)
+	//println(string(bodyText))
 
 	json.NewEncoder(w).Encode(true)
 }
@@ -432,6 +559,16 @@ func UpdateStatus(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "80"
+	}
+
+	stage := os.Getenv("UP_STAGE")
+	if stage != "" {
+		stage = "/" + stage
+	}
+
 	raw, err := ioutil.ReadFile("./config.json")
 	if err != nil {
 		fmt.Println(err.Error())
@@ -448,19 +585,19 @@ func main() {
 	key := c.Secret
 
 	router := httprouter.New()
-	router.GET("/", makeGzipHandler(Index))
-	router.GET("/admin"+key, makeGzipHandler(Admin))
-	router.GET("/items", makeGzipHandler(Items))
-	router.POST("/admin"+key, makeGzipHandler(ChangePayed))
-	router.POST("/deleteOrder"+key, makeGzipHandler(DeleteOrder))
-	router.GET("/order", makeGzipHandler(Order))
-	router.GET("/myorder/:order", makeGzipHandler(MyOrder))
-	router.POST("/order", makeGzipHandler(SendOrder))
-	router.GET("/orders", makeGzipHandler(Index))
-	router.GET("/pdf", makeGzipHandler(Pdf))
-	router.POST("/faxorder"+key, makeGzipHandler(FaxOrder))
-	router.POST("/updateStatus", makeGzipHandler(UpdateStatus))
-	router.GET("/public/*filepath", makeGzipHandler(ServeStatic))
+	router.GET(stage+"/", Index)
+	router.GET(stage+"/admin"+key, Admin)
+	router.GET(stage+"/items", Items)
+	router.GET(stage+"/order", Order)
+	router.GET(stage+"/myorder/:order", MyOrder)
+	router.GET(stage+"/orders", Index)
+	router.GET(stage+"/pdf", Pdf)
+	router.GET(stage+"/public/*filepath", ServeStatic)
+	router.POST(stage+"/faxorder"+key, FaxOrder)
+	router.POST(stage+"/updateStatus", UpdateStatus)
+	router.POST(stage+"/admin"+key, ChangePayed)
+	router.POST(stage+"/deleteOrder"+key, DeleteOrder)
+	router.POST(stage+"/order", SendOrder)
 
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }

@@ -1,237 +1,247 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Pizza-Bestellungen</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script
-              src="https://code.jquery.com/jquery-3.1.1.min.js"
-              integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-              crossorigin="anonymous"></script>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js"></script>
-        <style>
-#warning {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-}
 
-.container {
-    margin-top: 1rem;
-    margin-bottom: 5rem;
-}
+<head>
+    <meta charset="utf-8">
+    <title>Pizza-Bestellungen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+        crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js"></script>
+    <style>
+        #warning {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
 
-form {
-    width: 100%;
-}
+        .container {
+            margin-top: 1rem;
+            margin-bottom: 5rem;
+        }
 
-table {
-    counter-reset: rowNumber -1;
-}
+        form {
+            width: 100%;
+        }
 
-table tr {
-    counter-increment: rowNumber;
-}
+        table {
+            counter-reset: rowNumber -1;
+        }
 
-tbody th::before {
-    content: counter(rowNumber);
-}
+        table tr {
+            counter-increment: rowNumber;
+        }
 
-#orderButton {
-    width: 100%
-}
-        </style>
-        <script type="text/javascript">
-$(document).ready(function() {
-    function PizzaViewModel() {
-        var self = this;
-        self.name = ko.observable();
+        tbody th::before {
+            content: counter(rowNumber);
+        }
 
-        self.pizzas = ko.observableArray([]);
+        #orderButton {
+            width: 100%
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            function PizzaViewModel() {
+                var self = this;
+                self.name = ko.observable();
 
-        self.items = ko.observableArray([]);
+                self.pizzas = ko.observableArray([]);
 
-        self.selectedPizza = ko.observable();
-        self.selectedSize = ko.observable();
-        self.selectedExtras = ko.observableArray();
+                self.items = ko.observableArray([]);
 
-        self.sizes = ko.pureComputed(function() {
-            var pizza = self.selectedPizza();
-            if (pizza) return pizza.Sizes;
-            return [];
-        });
+                self.selectedPizza = ko.observable();
+                self.selectedSize = ko.observable();
+                self.selectedExtras = ko.observableArray();
 
-        self.extras = ko.pureComputed(function() {
-            var pizza = self.selectedPizza();
-            if (pizza) return pizza.Extras
-            return [];
-        });
+                self.sizes = ko.pureComputed(function () {
+                    var pizza = self.selectedPizza();
+                    if (pizza) return pizza.Sizes;
+                    return [];
+                });
 
-        self.centsToEuroString = function(cents) {
-            return ((cents / 100.0).toFixed(2)).toString() + " €";
-        };
+                self.extras = ko.pureComputed(function () {
+                    var pizza = self.selectedPizza();
+                    if (pizza) return pizza.Extras
+                    return [];
+                });
 
-        self.calcPrice = function(size, extras) {
-            var extrasPrice = 0;
-            for (var i = 0; i < extras.length; i++) {
-                extrasPrice += self.extraPrice(size, extras[i]);
-            }
+                self.centsToEuroString = function (cents) {
+                    return ((cents / 100.0).toFixed(2)).toString() + " €";
+                };
 
-            return size.Price + extrasPrice;
-        };
+                self.calcPrice = function (size, extras) {
+                    var extrasPrice = 0;
+                    for (var i = 0; i < extras.length; i++) {
+                        extrasPrice += self.extraPrice(size, extras[i]);
+                    }
 
-        self.pizzaPrice = function(pizza) {
-            return self.centsToEuroString(self.calcPrice(pizza.Size, pizza.Extras));
-        };
+                    return size.Price + extrasPrice;
+                };
 
-        self.price = ko.pureComputed(function() {
-            var size = self.selectedSize();
-            var extras = self.selectedExtras();
+                self.pizzaPrice = function (pizza) {
+                    return self.centsToEuroString(self.calcPrice(pizza.Size, pizza.Extras));
+                };
 
-            if (size) {
-                return self.centsToEuroString(self.calcPrice(size, extras));
-            }
-            return "";
-        });
+                self.price = ko.pureComputed(function () {
+                    var size = self.selectedSize();
+                    var extras = self.selectedExtras();
 
-        self.extraPrice = function(s, e) {
-            if (s.Name == "klein, 24 cm") {
-                return e.Price;
-            } else if (s.Name == "groß, 32 cm") {
-                return e.Price + 10;
-            } else if (s.Name == "Family, 45x32 cm") {
-                return e.Price + 60;
-            } else {
-                return e.Price + 130;
-            }
-        };
+                    if (size) {
+                        return self.centsToEuroString(self.calcPrice(size, extras));
+                    }
+                    return "";
+                });
 
-        self.updateButton = ko.computed(function() {
-            var pizzas = self.pizzas();
+                self.extraPrice = function (s, e) {
+                    if (s.Name == "klein, 24 cm") {
+                        return e.Price;
+                    } else if (s.Name == "groß, 32 cm") {
+                        return e.Price + 10;
+                    } else if (s.Name == "Family, 45x32 cm") {
+                        return e.Price + 60;
+                    } else {
+                        return e.Price + 130;
+                    }
+                };
 
-            $("#orderButton").prop("disabled", pizzas.length === 0);
-        });
+                self.updateButton = ko.computed(function () {
+                    var pizzas = self.pizzas();
 
-        self.totalPrice = ko.pureComputed(function() {
-            var pizzas = self.pizzas();
-            var total = 0;
+                    $("#orderButton").prop("disabled", pizzas.length === 0);
+                });
 
-            for (var i = 0; i < pizzas.length; i++) {
-                total += self.calcPrice(pizzas[i].Size, pizzas[i].Extras);
-            }
+                self.totalPrice = ko.pureComputed(function () {
+                    var pizzas = self.pizzas();
+                    var total = 0;
 
-            return self.centsToEuroString(total);
-        });
+                    for (var i = 0; i < pizzas.length; i++) {
+                        total += self.calcPrice(pizzas[i].Size, pizzas[i].Extras);
+                    }
+
+                    return self.centsToEuroString(total);
+                });
 
 
-        self.addPizza = function() {
-            var pizza = self.selectedPizza();
-            self.pizzas.push({ Name: pizza.Name, Size: self.selectedSize(), Extras: self.selectedExtras()});
-        };
+                self.addPizza = function () {
+                    var pizza = self.selectedPizza();
+                    self.pizzas.push({ Name: pizza.Name, Size: self.selectedSize(), Extras: self.selectedExtras() });
+                };
 
-        self.sendOrder = function() {
-            var pizzas = self.pizzas();
-            var name = self.name();
-            if (pizzas.length === 0) return;
+                self.sendOrder = function () {
+                    var pizzas = self.pizzas();
+                    var name = self.name();
+                    if (pizzas.length === 0) return;
 
-            var order = {
-                Id: -1,
-                Name: name,
-                Items: pizzas,
-                IsPayed: false
-            };
+                    var order = {
+                        Id: "",
+                        Name: name,
+                        Items: pizzas,
+                        IsPayed: false
+                    };
 
-            $.ajax({
-                url: '/order',
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(order),
-                success: function(data) {
-                    window.location.href = "/myorder/" + data.Id;
+                    $.ajax({
+                        url: '/order',
+                        type: 'POST',
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify(order),
+                        success: function (data) {
+                            window.location.href = "/myorder/" + data.Id;
+                        }
+                    });
                 }
+
+                self.deletePizza = function (pizza) {
+                    self.pizzas.remove(pizza);
+                }
+            }
+
+            var vm = new PizzaViewModel();
+
+            $.get("/items", function (items) {
+                vm.items(items);
             });
-        }
 
-        self.deletePizza = function(pizza) {
-            self.pizzas.remove(pizza);
-        }
-    }
+            ko.applyBindings(vm);
+        });
+    </script>
+</head>
 
-    var vm = new PizzaViewModel();
-
-    $.get("/items", function(items) {
-        vm.items(items);
-    });
-
-    ko.applyBindings(vm);
-});
-        </script>
-    </head>
-    <body>
-        <noscript>Für die Preisberechnung der Bestellung wird JS benötigt. Wer die Seite ohne JS nachbauen möchte, kann gerne Vorschläge einsenden.</noscript>
-        <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
-            <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <a class="navbar-brand" href="/">Pizza</a>
-        </nav>
-        <div class="container">
-            <div class="row">
-                <table class="table">
-                    <thead class="thead-inverse">
-                        <tr>
-                            <th>#</th>
-                            <th>Pizza</th>
-                            <th>Gr&ouml;&szlig;e</th>
-                            <th>Extras</th>
-                            <th>Preis <span data-bind="text: totalPrice"></span></th>
-                            <th>Aktion</th>
-                        </tr>
-                    </thead>
-                    <tbody data-bind="foreach: pizzas">
-                        <tr>
-                            <th scope="row"></th>
-                            <td data-bind="text: Name"></td>
-                            <td data-bind="text: Size.Name"></td>
-                            <td data-bind="text: Extras.map(function(extra) {return extra.Name;}).join(', ')"></td>
-                            <td data-bind="text: $parent.pizzaPrice($data)"></td>
-                            <td><a href="#" data-bind="click: function() {$parent.deletePizza($data);}">L&ouml;schen</a></td>
-                        </tr>
-                    </tbody>
-                    <tbody data-bind="if: pizzas().length === 0">
-                        <tr>
-                            <td colspan="6" class="text-center"> Keine Pizza hinzugef&uuml;gt </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <form data-bind="submit: addPizza" class="jumbotron">
-                    <div class="form-group">
-                        <label for="name">Name/Pseudonym (optional)</label>
-                        <input class="form-control" data-bind="value: name" id="name"></input>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="pizzaSelect">Pizza ausw&auml;hlen</label>
-                        <select class="form-control" data-bind="options: items, optionsText: function(item) {return item.Name + ' ' + item.Description;}, value: selectedPizza" id="pizzaSelect">
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="sizeSelect">Gr&ouml;&szlig;e ausw&auml;hlen</label>
-                        <select class="form-control" data-bind="options: sizes, optionsText: 'Name', value: selectedSize" id="sizeSelect">
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="extrasSelect">Extras ausw&auml;hlen</label>
-                        <select multiple class="form-control" data-bind="options: extras, optionsText: 'Name', selectedOptions: selectedExtras" id="extrasSelect">
-                        </select>
-                    </div>
-                    <p data-bind="text: price"></p>
-                    <button type="submit" class="btn btn-secondary">Pizza hinzuf&uuml;gen</button>
-                    <p class="alert alert-info" id="warning">Abschicken nicht vergessen (Eine Bestellung kann mehrere Pizzen enthalten)!</p>
-                </form>
-                <button id="orderButton" data-bind="click: sendOrder" class="btn btn-primary">Bestellung abschicken</button>
-            </div>
+<body>
+    <noscript>Für die Preisberechnung der Bestellung wird JS benötigt. Wer die Seite ohne JS nachbauen möchte, kann gerne Vorschläge
+        einsenden.</noscript>
+    <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="/">Pizza</a>
+    </nav>
+    <div class="container">
+        <div class="row">
+            <table class="table">
+                <thead class="thead-inverse">
+                    <tr>
+                        <th>#</th>
+                        <th>Pizza</th>
+                        <th>Gr&ouml;&szlig;e</th>
+                        <th>Extras</th>
+                        <th>Preis
+                            <span data-bind="text: totalPrice"></span>
+                        </th>
+                        <th>Aktion</th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: pizzas">
+                    <tr>
+                        <th scope="row"></th>
+                        <td data-bind="text: Name"></td>
+                        <td data-bind="text: Size.Name"></td>
+                        <td data-bind="text: Extras.map(function(extra) {return extra.Name;}).join(', ')"></td>
+                        <td data-bind="text: $parent.pizzaPrice($data)"></td>
+                        <td>
+                            <a href="#" data-bind="click: function() {$parent.deletePizza($data);}">L&ouml;schen</a>
+                        </td>
+                    </tr>
+                </tbody>
+                <tbody data-bind="if: pizzas().length === 0">
+                    <tr>
+                        <td colspan="6" class="text-center"> Keine Pizza hinzugef&uuml;gt </td>
+                    </tr>
+                </tbody>
+            </table>
+            <form data-bind="submit: addPizza" class="jumbotron">
+                <div class="form-group">
+                    <label for="name">Name/Pseudonym (optional)</label>
+                    <input class="form-control" data-bind="value: name" id="name"></input>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pizzaSelect">Pizza ausw&auml;hlen</label>
+                    <select class="form-control" data-bind="options: items, optionsText: function(item) {return item.Name + ' ' + item.Description;}, value: selectedPizza"
+                        id="pizzaSelect">
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="sizeSelect">Gr&ouml;&szlig;e ausw&auml;hlen</label>
+                    <select class="form-control" data-bind="options: sizes, optionsText: 'Name', value: selectedSize" id="sizeSelect">
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="extrasSelect">Extras ausw&auml;hlen</label>
+                    <select multiple class="form-control" data-bind="options: extras, optionsText: 'Name', selectedOptions: selectedExtras" id="extrasSelect">
+                    </select>
+                </div>
+                <p data-bind="text: price"></p>
+                <button type="submit" class="btn btn-secondary">Pizza hinzuf&uuml;gen</button>
+                <p class="alert alert-info" id="warning">Abschicken nicht vergessen (Eine Bestellung kann mehrere Pizzen enthalten)!</p>
+            </form>
+            <button id="orderButton" data-bind="click: sendOrder" class="btn btn-primary">Bestellung abschicken</button>
         </div>
-    </body>
+    </div>
+</body>
+
 </html>

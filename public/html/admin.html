@@ -1,120 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Admin</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <script
-              src="https://code.jquery.com/jquery-3.1.1.min.js"
-              integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-              crossorigin="anonymous"></script>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+
+<head>
+    <meta charset="utf-8">
+    <title>Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ"
+        crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn"
+        crossorigin="anonymous"></script>
     <script type="text/javascript">
-$(document).ready(function() {
-    var secret = "{{ Secret }}";
-    $("tbody tr").each(function() {
-        var elem = $(this);
-        var checkbox = elem.find("input");
-        var deleteButton = elem.find("a");
-        var id = elem.find("td").first().text();
+        $(document).ready(function () {
+            var secret = "{{ Secret }}";
+            $("tbody tr").each(function () {
+                var elem = $(this);
+                var checkbox = elem.find("input");
+                var deleteButton = elem.find("a");
+                var id = elem.find("td").first().text();
 
-        checkbox.change(function () {
-            console.log(id, this.checked);
+                checkbox.change(function () {
+                    elem.toggleClass("bg-success");
 
-            elem.toggleClass("bg-success");
+                    $.ajax({
+                        url: '/admin' + secret,
+                        type: 'POST',
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify({ "Id": id, "IsPayed": this.checked })
+                    });
+                });
 
-            $.ajax({
-                url: '/admin' + secret,
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({"Id": +id, "IsPayed": this.checked})
+                deleteButton.click(function () {
+                    $.ajax({
+                        url: '/deleteOrder' + secret,
+                        type: 'POST',
+                        contentType: 'application/json; charset=utf-8',
+                        data: JSON.stringify({ "Id": id })
+                    });
+
+                    elem.remove();
+                });
+            });
+
+            $("form").submit(function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '/faxorder' + secret,
+                    type: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ "Name": $("#nameField").val(), "Number": $("#numberField").val() }),
+                    success: function (result) {
+                        if (result) {
+                            alert("Bestellung erfolgreich!");
+                        } else {
+                            alert("Fehler bei Bestellung!");
+                        }
+                    }
+                });
             });
         });
-
-        deleteButton.click(function() {
-            $.ajax({
-                url: '/deleteOrder' + secret,
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify({"Id": +id})
-            });
-
-            elem.remove();
-        });
-    });
-
-    $("form").submit(function (e) {
-        e.preventDefault();
-        $.ajax({
-            url: '/faxorder' + secret,
-            type: 'POST',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify({ "Name": $("#nameField").val(), "Number": $("#numberField").val()}),
-            success: function(result) {
-                if (result) {
-                    alert("Bestellung erfolgreich!");
-                } else {
-                    alert("Fehler bei Bestellung!");
-                }
-            }
-        });
-    });
-});
     </script>
-    </head>
-    <body>
-        <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
-            <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <a class="navbar-brand" href="/">Pizza</a>
-        </nav>
-        <div class="container">
-            <div class="row">
-                <h3>Alle Bestellungen</h3>
-                <table class="table">
-                    <thead class="thead-inverse">
-                        <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Inhalt</th>
-                            <th>Bezahlt?</th>
-                            <th>Preis</th>
-                            <th>Aktion</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{ range $index, $element := . }}
-                        <tr {{ if eq $element.IsPayed true }} class="bg-success" {{ end }}>
-                            <td scope="row">{{ $element.Id }}</td>
-                            <td>{{ $element.Name }}</td>
-                            <td>{{ $element.OrderItems }}</td>
-                            <td><input type="CHECKBOX" {{ if eq $element.IsPayed true }} checked {{ end }}></input></td>
-                            <td>{{ $element.CalcPrice }} €</td>
-                            <td><a href="#">L&ouml;schen</a></td>
-                        </tr>
-                        {{ end }}
-                    </tbody>
-                </table>
-            </div>
-            <p>
-            Gesamtpreis: <strong>{{ CompletePrice }} €</strong>
-            </p>
-            <p>
-            Anzahl: <strong>{{ len . }}</strong>
-            </p>
-            <form>
-                <div class="form-group">
-                  <label for="nameField">Name</label>
-                  <input type="text" class="form-control" id="nameField" required>
-                </div>
-                <div class="form-group">
-                  <label for="numberField">Telefonnummer</label>
-                  <input type="text" class="form-control" id="numberField" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Absenden</button>
-              </form>
+</head>
+
+<body>
+    <nav class="navbar navbar-toggleable-md navbar-light bg-faded">
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="/">Pizza</a>
+    </nav>
+    <div class="container">
+        <div class="row">
+            <h3>Alle Bestellungen</h3>
+            <table class="table">
+                <thead class="thead-inverse">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Inhalt</th>
+                        <th>Bezahlt?</th>
+                        <th>Preis</th>
+                        <th>Aktion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ range $index, $element := . }}
+                    <tr {{ if eq $element.IsPayed true }} class="bg-success" {{ end }}>
+                        <td scope="row">{{ $element.Id }}</td>
+                        <td>{{ $element.Name }}</td>
+                        <td>{{ $element.OrderItems }}</td>
+                        <td>
+                            <input type="CHECKBOX" {{ if eq $element.IsPayed true }} checked {{ end }}></input>
+                        </td>
+                        <td>{{ $element.CalcPrice }} €</td>
+                        <td>
+                            <a href="#">L&ouml;schen</a>
+                        </td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
         </div>
-    </body>
+        <p>
+            Gesamtpreis:
+            <strong>{{ CompletePrice }} €</strong>
+        </p>
+        <p>
+            Anzahl:
+            <strong>{{ len . }}</strong>
+        </p>
+        <form>
+            <div class="form-group">
+                <label for="nameField">Name</label>
+                <input type="text" class="form-control" id="nameField" required>
+            </div>
+            <div class="form-group">
+                <label for="numberField">Telefonnummer</label>
+                <input type="text" class="form-control" id="numberField" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Absenden</button>
+        </form>
+    </div>
+</body>
+
 </html>
