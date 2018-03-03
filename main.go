@@ -462,9 +462,5 @@ func main() {
 	router.POST("/updateStatus", makeGzipHandler(UpdateStatus))
 	router.GET("/public/*filepath", makeGzipHandler(ServeStatic))
 
-	go func() {
-		log.Fatal(http.ListenAndServeTLS(":443", "/etc/letsencrypt/live/pizza.raytracer.me/fullchain.pem", "/etc/letsencrypt/live/pizza.raytracer.me/privkey.pem", router))
-	}()
-	//No HSTS for now, Pull Requests are welcome
-	log.Fatal(http.ListenAndServe(":80", router))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
 }

@@ -1,0 +1,14 @@
+{
+  "name": "pizza",
+  "profile": "default",
+  "regions": [
+    "eu-central-1"
+  ],
+  "stages": {
+    "development": {
+      "proxy": {
+        "command": "./main"
+      }
+    }
+  }
+}
