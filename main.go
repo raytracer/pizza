@@ -564,10 +564,7 @@ func main() {
 		port = "80"
 	}
 
-	stage := os.Getenv("UP_STAGE")
-	if stage != "" {
-		stage = "/" + stage
-	}
+	//stage := os.Getenv("UP_STAGE")
 
 	raw, err := ioutil.ReadFile("./config.json")
 	if err != nil {
@@ -585,19 +582,19 @@ func main() {
 	key := c.Secret
 
 	router := httprouter.New()
-	router.GET(stage+"/", Index)
-	router.GET(stage+"/admin"+key, Admin)
-	router.GET(stage+"/items", Items)
-	router.GET(stage+"/order", Order)
-	router.GET(stage+"/myorder/:order", MyOrder)
-	router.GET(stage+"/orders", Index)
-	router.GET(stage+"/pdf", Pdf)
-	router.GET(stage+"/public/*filepath", ServeStatic)
-	router.POST(stage+"/faxorder"+key, FaxOrder)
-	router.POST(stage+"/updateStatus", UpdateStatus)
-	router.POST(stage+"/admin"+key, ChangePayed)
-	router.POST(stage+"/deleteOrder"+key, DeleteOrder)
-	router.POST(stage+"/order", SendOrder)
+	router.GET("/", Index)
+	router.GET("/admin"+key, Admin)
+	router.GET("/items", Items)
+	router.POST("/admin"+key, ChangePayed)
+	router.POST("/deleteOrder"+key, DeleteOrder)
+	router.GET("/order", Order)
+	router.GET("/myorder/:order", MyOrder)
+	router.POST("/order", SendOrder)
+	router.GET("/orders", Index)
+	router.GET("/pdf", Pdf)
+	router.POST("/faxorder"+key, FaxOrder)
+	router.POST("/updateStatus", UpdateStatus)
+	router.GET("/public/*filepath", ServeStatic)
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
 }

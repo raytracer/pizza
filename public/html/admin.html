@@ -24,7 +24,7 @@
                     elem.toggleClass("bg-success");
 
                     $.ajax({
-                        url: '/admin' + secret,
+                        url: 'admin' + secret,
                         type: 'POST',
                         contentType: 'application/json; charset=utf-8',
                         data: JSON.stringify({ "Id": id, "IsPayed": this.checked })
@@ -33,7 +33,7 @@
 
                 deleteButton.click(function () {
                     $.ajax({
-                        url: '/deleteOrder' + secret,
+                        url: 'deleteOrder' + secret,
                         type: 'POST',
                         contentType: 'application/json; charset=utf-8',
                         data: JSON.stringify({ "Id": id })
@@ -46,7 +46,7 @@
             $("form").submit(function (e) {
                 e.preventDefault();
                 $.ajax({
-                    url: '/faxorder' + secret,
+                    url: 'faxorder' + secret,
                     type: 'POST',
                     contentType: 'application/json; charset=utf-8',
                     data: JSON.stringify({ "Name": $("#nameField").val(), "Number": $("#numberField").val() }),
@@ -69,7 +69,7 @@
             aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <a class="navbar-brand" href="/">Pizza</a>
+        <a class="navbar-brand" href="../">Pizza</a>
     </nav>
     <div class="container">
         <div class="row">
