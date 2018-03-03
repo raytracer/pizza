@@ -9,6 +9,7 @@ import (
 	"log"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -521,32 +522,32 @@ func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	setAddress(address)
 
-	//client := &http.Client{}
+	client := &http.Client{}
 
-	//form := url.Values{}
-	//form.Add("To", c.Phone)
-	//form.Add("From", "+4993161569016")
-	//form.Add("MediaUrl", "https://pizza.raytracer.me/pdf")
-	//form.Add("StatusCallback", "http://pizzas.raytracer.me/updateStatus")
+	form := url.Values{}
+	form.Add("To", c.Phone)
+	form.Add("From", "+4993161569016")
+	form.Add("MediaUrl", "https://pizza.raytracer.me/pdf")
+	form.Add("StatusCallback", "https://pizzas.raytracer.me/updateStatus")
 
-	//req, err := http.NewRequest("POST", "https://fax.twilio.com/v1/Faxes", strings.NewReader(form.Encode()))
+	req, err := http.NewRequest("POST", "https://fax.twilio.com/v1/Faxes", strings.NewReader(form.Encode()))
 
-	//if err != nil {
-	//	json.NewEncoder(w).Encode(false)
-	//	return
-	//}
+	if err != nil {
+		json.NewEncoder(w).Encode(false)
+		return
+	}
 
-	//req.SetBasicAuth(c.Username, c.Password)
-	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.SetBasicAuth(c.Username, c.Password)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	//resp, err := client.Do(req)
-	//if err != nil {
-	//	json.NewEncoder(w).Encode(false)
-	//	return
-	//}
+	resp, err := client.Do(req)
+	if err != nil {
+		json.NewEncoder(w).Encode(false)
+		return
+	}
 
-	//bodyText, err := ioutil.ReadAll(resp.Body)
-	//println(string(bodyText))
+	bodyText, err := ioutil.ReadAll(resp.Body)
+	println(string(bodyText))
 
 	json.NewEncoder(w).Encode(true)
 }
