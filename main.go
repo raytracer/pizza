@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -22,7 +21,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/julienschmidt/httprouter"
 	"github.com/jung-kurt/gofpdf"
-	uuid "github.com/satori/go.uuid"
+	"github.com/rs/xid"
+	hashids "github.com/speps/go-hashids"
 )
 
 var funcMap = template.FuncMap{
@@ -35,13 +35,14 @@ var admin, _ = template.New("admin.html").Funcs(funcMap).ParseFiles("public/html
 var orderTemplate, _ = template.ParseFiles("public/html/order.html")
 var myOrderTemplate, _ = template.ParseFiles("public/html/myorder.html")
 
-var mutex = &sync.Mutex{}
-
 var sess, err = session.NewSession(&aws.Config{
 	Region:      aws.String("eu-central-1"),
 	Credentials: credentials.NewSharedCredentials("credentials", "dynamodb"),
 })
 var svc = dynamodb.New(sess)
+
+var hd = hashids.NewData()
+var hashGen *hashids.HashID
 
 type config struct {
 	Username string
@@ -307,9 +308,8 @@ func SendOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	t.IsPayed = false
-	mutex.Lock()
 
-	t.Id = uuid.Must(uuid.NewV4()).String()
+	t.Id = xid.New().String()
 	orderAVMap, err := dynamodbattribute.MarshalMap(t)
 	if err != nil {
 		panic("Cannot marshal order into AttributeValue map")
@@ -328,8 +328,6 @@ func SendOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 	fmt.Println(resp)
-
-	mutex.Unlock()
 
 	defer r.Body.Close()
 
@@ -566,6 +564,8 @@ func main() {
 	}
 
 	//stage := os.Getenv("UP_STAGE")
+
+	hashGen, _ = hashids.NewWithData(hd)
 
 	raw, err := ioutil.ReadFile("./config.json")
 	if err != nil {

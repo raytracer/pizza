@@ -9,6 +9,9 @@
       "proxy": {
         "command": "./main"
       }
+    },
+    "production": {
+      "domain": "pizza.raytracer.me"
     }
   }
 }
