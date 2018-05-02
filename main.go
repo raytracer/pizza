@@ -526,7 +526,7 @@ func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	form.Add("To", c.Phone)
 	form.Add("From", "+4993161569016")
 	form.Add("MediaUrl", "https://pizza.raytracer.me/pdf")
-	form.Add("StatusCallback", "https://pizzas.raytracer.me/updateStatus")
+	form.Add("StatusCallback", "https://pizza.raytracer.me/updateStatus")
 
 	req, err := http.NewRequest("POST", "https://fax.twilio.com/v1/Faxes", strings.NewReader(form.Encode()))
 
