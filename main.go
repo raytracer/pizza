@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -338,10 +339,11 @@ func SendOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 //multiply price named mp for convenience
 func mp(sizes []size, factor float64) []size {
-	for _, size := range sizes {
-		size.Price = int(float64(size.Price) * factor)
+	newSizes := make([]size, len(sizes))
+	for i, s := range sizes {
+		newSizes[i] = size{Name: s.Name, Price: int(float64(s.Price) * factor)}
 	}
-	return sizes
+	return newSizes
 }
 
 func Items(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -464,6 +466,7 @@ func Pdf(addressVal address) string {
 	var b bytes.Buffer
 	writer := bufio.NewWriter(&b)
 	pdf.Output(writer)
+	writer.Flush()
 	return base64.StdEncoding.EncodeToString(b.Bytes())
 }
 
@@ -508,14 +511,14 @@ func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
+	bodyText, err := ioutil.ReadAll(resp.Body)
+	println(string(bodyText))
+
 	if resp.StatusCode != 200 {
-		println("Error while sending the Fax: " + string(resp.StatusCode))
+		println("Error while sending the Fax: " + strconv.Itoa(resp.StatusCode))
 		json.NewEncoder(w).Encode(false)
 		return
 	}
-
-	bodyText, err := ioutil.ReadAll(resp.Body)
-	println(string(bodyText))
 
 	json.NewEncoder(w).Encode(true)
 }
