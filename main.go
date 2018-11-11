@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -9,7 +12,6 @@ import (
 	"log"
 	"mime"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -334,111 +336,70 @@ func SendOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	json.NewEncoder(w).Encode(t)
 }
 
+//multiply price named mp for convenience
+func mp(sizes []size, factor float64) []size {
+	for _, size := range sizes {
+		size.Price = int(float64(size.Price) * factor)
+	}
+	return sizes
+}
+
 func Items(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 
 	extrasAll := []extra{extra{Name: "Basilikum", Price: 50}, extra{Name: "Knoblauch", Price: 50}, extra{Name: "Oregano", Price: 50}, extra{Name: "Ananas", Price: 50}, extra{Name: "Artischockenherzen", Price: 50}, extra{Name: "Bacon", Price: 50}, extra{Name: "Barbecuesauce", Price: 50}, extra{Name: "Blattspinat", Price: 50}, extra{Name: "Brokkoli", Price: 50}, extra{Name: "Champignons", Price: 50}, extra{Name: "Eier", Price: 50}, extra{Name: "Fetakäse", Price: 50}, extra{Name: "Frutti di Mare", Price: 50}, extra{Name: "Gorgonzola", Price: 50}, extra{Name: "Gouda", Price: 50}, extra{Name: "Hühnerbrust", Price: 50}, extra{Name: "Kapern", Price: 50}, extra{Name: "Mais", Price: 50}, extra{Name: "Mozzarella", Price: 50}, extra{Name: "Olivenscheiben", Price: 50}, extra{Name: "Paprika", Price: 50}, extra{Name: "Peperoniringe", Price: 50}, extra{Name: "Peperoniwurst", Price: 50}, extra{Name: "Remoulade", Price: 50}, extra{Name: "Salami", Price: 50}, extra{Name: "Salsa", Price: 50}, extra{Name: "Sardellen", Price: 50}, extra{Name: "Sauce Bolognese", Price: 50}, extra{Name: "Shrimps", Price: 50}, extra{Name: "Spargel", Price: 50}, extra{Name: "Tabasco", Price: 50}, extra{Name: "Taco Beef", Price: 50}, extra{Name: "Thunfisch", Price: 50}, extra{Name: "Zwiebelringe", Price: 50}, extra{Name: "frische Champignons", Price: 50}, extra{Name: "frische Tomatenscheiben", Price: 50}, extra{Name: "italienischer Vorderschinken", Price: 50}, extra{Name: "mexikanische Jalapenos", Price: 50}}
 
+	priceFactor := 1.1
+
 	size1 := []size{size{Name: "klein, 24 cm", Price: 650}, size{Name: "groß, 32 cm", Price: 800}, size{Name: "Family, 45x32 cm", Price: 1420}, size{Name: "Party, 60x40 cm", Price: 1690}}
-	pizza1 := menuItem{Name: "Pizza Margherita", Description: "mit Pizzasauce, Mozzarella und Basilikum", Sizes: size1, Extras: extrasAll}
+	pizza1 := menuItem{Name: "Pizza Margherita", Description: "mit Pizzasauce, Mozzarella und Basilikum", Sizes: mp(size1, priceFactor), Extras: extrasAll}
 
 	size2 := []size{size{Name: "klein, 24 cm", Price: 700}, size{Name: "groß, 32 cm", Price: 860}, size{Name: "Family, 45x32 cm", Price: 1530}, size{Name: "Party, 60x40 cm", Price: 1870}}
-	pizza2 := menuItem{Name: "Pizza New York", Description: "mit Hühnerbrust und Oliven", Sizes: size2, Extras: extrasAll}
+	pizza2 := menuItem{Name: "Pizza New York", Description: "mit Hühnerbrust und Oliven", Sizes: mp(size2, priceFactor), Extras: extrasAll}
 
 	size3 := []size{size{Name: "klein, 24 cm", Price: 700}, size{Name: "groß, 32 cm", Price: 860}, size{Name: "Family, 45x32 cm", Price: 1530}, size{Name: "Party, 60x40 cm", Price: 1870}}
-	pizza3 := menuItem{Name: "Pizza Popeye", Description: "mit Spinat und Feta", Sizes: size3, Extras: extrasAll}
+	pizza3 := menuItem{Name: "Pizza Popeye", Description: "mit Spinat und Feta", Sizes: mp(size3, priceFactor), Extras: extrasAll}
 
 	size4 := []size{size{Name: "klein, 24 cm", Price: 700}, size{Name: "groß, 32 cm", Price: 860}, size{Name: "Family, 45x32 cm", Price: 1530}, size{Name: "Party, 60x40 cm", Price: 1870}}
-	pizza4 := menuItem{Name: "Pizza Hawaii", Description: "mit Schinken und Ananas", Sizes: size4, Extras: extrasAll}
+	pizza4 := menuItem{Name: "Pizza Hawaii", Description: "mit Schinken und Ananas", Sizes: mp(size4, priceFactor), Extras: extrasAll}
 
 	size5 := []size{size{Name: "klein, 24 cm", Price: 750}, size{Name: "groß, 32 cm", Price: 920}, size{Name: "Family, 45x32 cm", Price: 1640}, size{Name: "Party, 60x40 cm", Price: 2050}}
-	pizza5 := menuItem{Name: "Pizza Mary", Description: "mit Schinken, Salami und Champignons", Sizes: size5, Extras: extrasAll}
+	pizza5 := menuItem{Name: "Pizza Mary", Description: "mit Schinken, Salami und Champignons", Sizes: mp(size5, priceFactor), Extras: extrasAll}
 
 	size6 := []size{size{Name: "klein, 24 cm", Price: 750}, size{Name: "groß, 32 cm", Price: 920}, size{Name: "Family, 45x32 cm", Price: 1640}, size{Name: "Party, 60x40 cm", Price: 2050}}
-	pizza6 := menuItem{Name: "Pizza Samoa", Description: "mit Thunfisch, Zwiebelringen und Ananas", Sizes: size6, Extras: extrasAll}
+	pizza6 := menuItem{Name: "Pizza Samoa", Description: "mit Thunfisch, Zwiebelringen und Ananas", Sizes: mp(size6, priceFactor), Extras: extrasAll}
 
 	size7 := []size{size{Name: "klein, 24 cm", Price: 750}, size{Name: "groß, 32 cm", Price: 920}, size{Name: "Family, 45x32 cm", Price: 1640}, size{Name: "Party, 60x40 cm", Price: 2050}}
-	pizza7 := menuItem{Name: "Pizza Texas", Description: "mit Taco Beef, Jalapenos und Bohnen", Sizes: size7, Extras: extrasAll}
+	pizza7 := menuItem{Name: "Pizza Texas", Description: "mit Taco Beef, Jalapenos und Bohnen", Sizes: mp(size7, priceFactor), Extras: extrasAll}
 
 	size8 := []size{size{Name: "klein, 24 cm", Price: 800}, size{Name: "groß, 32 cm", Price: 980}, size{Name: "Family, 45x32 cm", Price: 1750}, size{Name: "Party, 60x40 cm", Price: 2230}}
-	pizza8 := menuItem{Name: "Pizza Jazz", Description: "mit Schinken, Spargel, Tomaten und Barbecuesauce", Sizes: size8, Extras: extrasAll}
+	pizza8 := menuItem{Name: "Pizza Jazz", Description: "mit Schinken, Spargel, Tomaten und Barbecuesauce", Sizes: mp(size8, priceFactor), Extras: extrasAll}
 
 	size9 := []size{size{Name: "klein, 24 cm", Price: 800}, size{Name: "groß, 32 cm", Price: 980}, size{Name: "Family, 45x32 cm", Price: 1750}, size{Name: "Party, 60x40 cm", Price: 2230}}
-	pizza9 := menuItem{Name: "Pizza Veggie", Description: "mit Broccoli, Tomaten, Paprika und Artischocken", Sizes: size9, Extras: extrasAll}
+	pizza9 := menuItem{Name: "Pizza Veggie", Description: "mit Broccoli, Tomaten, Paprika und Artischocken", Sizes: mp(size9, priceFactor), Extras: extrasAll}
 
 	size10 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
-	pizza10 := menuItem{Name: "Pizza Capricciosa", Description: "mit Schinken, Salami, Oliven, Paprika und Zwiebeln", Sizes: size10, Extras: extrasAll}
+	pizza10 := menuItem{Name: "Pizza Capricciosa", Description: "mit Schinken, Salami, Oliven, Paprika und Zwiebeln", Sizes: mp(size10, priceFactor), Extras: extrasAll}
 
 	size11 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
-	pizza11 := menuItem{Name: "Pizza Mexicana", Description: "mit Peperoniwurst, Speck, Taco Beef, Jalapenos und Zwiebeln", Sizes: size11, Extras: extrasAll}
+	pizza11 := menuItem{Name: "Pizza Mexicana", Description: "mit Peperoniwurst, Speck, Taco Beef, Jalapenos und Zwiebeln", Sizes: mp(size11, priceFactor), Extras: extrasAll}
 
 	size12 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
-	pizza12 := menuItem{Name: "Pizza Outback", Description: "mit Taco Beef, Schinken, Zwiebeln, Jalapenos und Ei", Sizes: size12, Extras: extrasAll}
+	pizza12 := menuItem{Name: "Pizza Outback", Description: "mit Taco Beef, Schinken, Zwiebeln, Jalapenos und Ei", Sizes: mp(size12, priceFactor), Extras: extrasAll}
 
 	size13 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
-	pizza13 := menuItem{Name: "Pizza Beverly Hills", Description: "mit Hühnerbrust, Taco Beef, Broccoli, Ananas und Barbecuesauce", Sizes: size13, Extras: extrasAll}
+	pizza13 := menuItem{Name: "Pizza Beverly Hills", Description: "mit Hühnerbrust, Taco Beef, Broccoli, Ananas und Barbecuesauce", Sizes: mp(size13, priceFactor), Extras: extrasAll}
 
 	size14 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
-	pizza14 := menuItem{Name: "Pizza Speciale", Description: "mit Schinken, Salami, Champignons, Paprika und Ei", Sizes: size14, Extras: extrasAll}
+	pizza14 := menuItem{Name: "Pizza Speciale", Description: "mit Schinken, Salami, Champignons, Paprika und Ei", Sizes: mp(size14, priceFactor), Extras: extrasAll}
 
 	size15 := []size{size{Name: "klein, 24 cm", Price: 900}, size{Name: "groß, 32 cm", Price: 1100}, size{Name: "Family, 45x32 cm", Price: 1970}, size{Name: "Party, 60x40 cm", Price: 2590}}
-	pizza15 := menuItem{Name: "Pizza Full House", Description: "mit Schinken, Peperoniwurst, Speck, Paprika, Peperoni und Ei", Sizes: size15, Extras: extrasAll}
+	pizza15 := menuItem{Name: "Pizza Full House", Description: "mit Schinken, Peperoniwurst, Speck, Paprika, Peperoni und Ei", Sizes: mp(size15, priceFactor), Extras: extrasAll}
 
 	size16 := []size{size{Name: "klein, 24 cm", Price: 600}, size{Name: "groß, 32 cm", Price: 740}, size{Name: "Family, 45x32 cm", Price: 1310}, size{Name: "Party, 60x40 cm", Price: 1510}}
-	pizza16 := menuItem{Name: "Pizza Basic/Wunschpizza", Description: "mit Pizzasauce und Käse", Sizes: size16, Extras: extrasAll}
+	pizza16 := menuItem{Name: "Pizza Basic/Wunschpizza", Description: "mit Pizzasauce und Käse", Sizes: mp(size16, priceFactor), Extras: extrasAll}
 
 	json.NewEncoder(w).Encode([]menuItem{pizza1, pizza2, pizza3, pizza4, pizza5, pizza6, pizza7, pizza8, pizza9, pizza10, pizza11, pizza12, pizza13, pizza14, pizza15, pizza16})
-}
-
-func getAddress() address {
-	params := &dynamodb.GetItemInput{
-		TableName: aws.String("Addresses"),
-		Key: map[string]*dynamodb.AttributeValue{
-			"Id": {
-				N: aws.String("1"),
-			},
-		},
-	}
-
-	resp, err := svc.GetItem(params)
-	if err != nil {
-		fmt.Printf("ERROR: %v\n", err.Error())
-	}
-
-	var address address
-	err = dynamodbattribute.UnmarshalMap(resp.Item, &address)
-
-	return address
-}
-
-func setAddress(address address) {
-	params := &dynamodb.UpdateItemInput{
-		TableName: aws.String("Addresses"),
-		Key: map[string]*dynamodb.AttributeValue{
-			"Id": {
-				N: aws.String("1"),
-			},
-		},
-		UpdateExpression: aws.String("set #n1 = :Name, #n2 = :Number"),
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":Name": {
-				S: aws.String(address.Name),
-			},
-			":Number": {
-				S: aws.String(address.Number),
-			},
-		},
-		ExpressionAttributeNames: map[string]*string{
-			"#n1": aws.String("Name"),
-			"#n2": aws.String("Number"),
-		},
-	}
-
-	_, err = svc.UpdateItem(params)
-	if err != nil {
-		fmt.Printf("ERROR: %v\n", err.Error())
-		return
-	}
 }
 
 func getOrders() []order {
@@ -469,17 +430,13 @@ func getOrders() []order {
 	return orders
 }
 
-func Pdf(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.Header().Set("Content-Type", "application/pdf")
-
+func Pdf(addressVal address) string {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetAuthor("Christoph Müller", false)
 	pdf.AddPage()
 	pdf.SetFont("Times", "", 16)
 
 	tr := pdf.UnicodeTranslatorFromDescriptor("")
-
-	addressVal := getAddress()
 
 	message := "Treffpunkt 8 (blaues Schild) / Parkplatz Informatik, bitte anrufen wenn da, wir kommen dann raus"
 	addressTxt := fmt.Sprintf("%s\nTheodor-Boveri-Weg\n97074 Würzburg\n%s\n\nBemerkung:\n%s\n\nZahlung: Bar\n\n", addressVal.Name, addressVal.Number, message)
@@ -504,7 +461,10 @@ func Pdf(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		}
 	}
 
-	pdf.Output(w)
+	var b bytes.Buffer
+	writer := bufio.NewWriter(&b)
+	pdf.Output(writer)
+	return base64.StdEncoding.EncodeToString(b.Bytes())
 }
 
 func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -518,17 +478,21 @@ func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
-	setAddress(address)
-
 	client := &http.Client{}
 
-	form := url.Values{}
-	form.Add("To", c.Phone)
-	form.Add("From", "+4993161569016")
-	form.Add("MediaUrl", "https://pizza.raytracer.me/pdf")
-	form.Add("StatusCallback", "https://pizza.raytracer.me/updateStatus")
+	faxJson, err := json.Marshal(struct {
+		FaxlineID     string `json:"faxlineId"`
+		Recipient     string `json:"recipient"`
+		Filename      string `json:"filename"`
+		Base64Content string `json:"base64Content"`
+	}{"f0", c.Phone, "bestellung.pdf", Pdf(address)})
 
-	req, err := http.NewRequest("POST", "https://fax.twilio.com/v1/Faxes", strings.NewReader(form.Encode()))
+	if err != nil {
+		json.NewEncoder(w).Encode(false)
+		return
+	}
+
+	req, err := http.NewRequest("POST", "https://api.sipgate.com/v2/sessions/fax", bytes.NewBuffer(faxJson))
 
 	if err != nil {
 		json.NewEncoder(w).Encode(false)
@@ -536,10 +500,16 @@ func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	req.SetBasicAuth(c.Username, c.Password)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
+		json.NewEncoder(w).Encode(false)
+		return
+	}
+
+	if resp.StatusCode != 200 {
+		println("Error while sending the Fax: " + string(resp.StatusCode))
 		json.NewEncoder(w).Encode(false)
 		return
 	}
@@ -548,13 +518,6 @@ func FaxOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	println(string(bodyText))
 
 	json.NewEncoder(w).Encode(true)
-}
-
-func UpdateStatus(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.Header().Set("Content-Type", "application/json")
-
-	bodyText, _ := ioutil.ReadAll(r.Body)
-	println(string(bodyText))
 }
 
 func main() {
@@ -592,9 +555,7 @@ func main() {
 	router.GET("/myorder/:order", MyOrder)
 	router.POST("/order", SendOrder)
 	router.GET("/orders", Index)
-	router.GET("/pdf", Pdf)
 	router.POST("/faxorder"+key, FaxOrder)
-	router.POST("/updateStatus", UpdateStatus)
 	router.GET("/public/*filepath", ServeStatic)
 
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
