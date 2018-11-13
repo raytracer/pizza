@@ -337,11 +337,15 @@ func SendOrder(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	json.NewEncoder(w).Encode(t)
 }
 
+func roundToNextTenCents(price int) int {
+	return price + ((10 - (price % 10)) % 10)
+}
+
 //multiply price named mp for convenience
 func mp(sizes []size, factor float64) []size {
 	newSizes := make([]size, len(sizes))
 	for i, s := range sizes {
-		newSizes[i] = size{Name: s.Name, Price: int(float64(s.Price) * factor)}
+		newSizes[i] = size{Name: s.Name, Price: roundToNextTenCents(int(float64(s.Price) * factor))}
 	}
 	return newSizes
 }
