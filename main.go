@@ -357,52 +357,52 @@ func Items(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	priceFactor := 1.1
 
-	size1 := []size{size{Name: "klein, 24 cm", Price: 650}, size{Name: "groß, 32 cm", Price: 800}, size{Name: "Family, 45x32 cm", Price: 1420}, size{Name: "Party, 60x40 cm", Price: 1690}}
+	size1 := []size{size{Name: "klein, 24 cm", Price: 650}, size{Name: "groß, 32 cm", Price: 840}, size{Name: "Family, 45x32 cm", Price: 1440}, size{Name: "Party, 60x40 cm", Price: 1790}}
 	pizza1 := menuItem{Name: "Pizza Margherita", Description: "mit Pizzasauce, Mozzarella und Basilikum", Sizes: mp(size1, priceFactor), Extras: extrasAll}
 
-	size2 := []size{size{Name: "klein, 24 cm", Price: 700}, size{Name: "groß, 32 cm", Price: 860}, size{Name: "Family, 45x32 cm", Price: 1530}, size{Name: "Party, 60x40 cm", Price: 1870}}
+	size2 := []size{size{Name: "klein, 24 cm", Price: 700}, size{Name: "groß, 32 cm", Price: 900}, size{Name: "Family, 45x32 cm", Price: 1550}, size{Name: "Party, 60x40 cm", Price: 1970}}
 	pizza2 := menuItem{Name: "Pizza New York", Description: "mit Hühnerbrust und Oliven", Sizes: mp(size2, priceFactor), Extras: extrasAll}
 
-	size3 := []size{size{Name: "klein, 24 cm", Price: 700}, size{Name: "groß, 32 cm", Price: 860}, size{Name: "Family, 45x32 cm", Price: 1530}, size{Name: "Party, 60x40 cm", Price: 1870}}
+	size3 := []size{size{Name: "klein, 24 cm", Price: 700}, size{Name: "groß, 32 cm", Price: 900}, size{Name: "Family, 45x32 cm", Price: 1550}, size{Name: "Party, 60x40 cm", Price: 1970}}
 	pizza3 := menuItem{Name: "Pizza Popeye", Description: "mit Spinat und Feta", Sizes: mp(size3, priceFactor), Extras: extrasAll}
 
-	size4 := []size{size{Name: "klein, 24 cm", Price: 700}, size{Name: "groß, 32 cm", Price: 860}, size{Name: "Family, 45x32 cm", Price: 1530}, size{Name: "Party, 60x40 cm", Price: 1870}}
+	size4 := []size{size{Name: "klein, 24 cm", Price: 700}, size{Name: "groß, 32 cm", Price: 900}, size{Name: "Family, 45x32 cm", Price: 1550}, size{Name: "Party, 60x40 cm", Price: 1970}}
 	pizza4 := menuItem{Name: "Pizza Hawaii", Description: "mit Schinken und Ananas", Sizes: mp(size4, priceFactor), Extras: extrasAll}
 
-	size5 := []size{size{Name: "klein, 24 cm", Price: 750}, size{Name: "groß, 32 cm", Price: 920}, size{Name: "Family, 45x32 cm", Price: 1640}, size{Name: "Party, 60x40 cm", Price: 2050}}
+	size5 := []size{size{Name: "klein, 24 cm", Price: 750}, size{Name: "groß, 32 cm", Price: 960}, size{Name: "Family, 45x32 cm", Price: 1660}, size{Name: "Party, 60x40 cm", Price: 2150}}
 	pizza5 := menuItem{Name: "Pizza Mary", Description: "mit Schinken, Salami und Champignons", Sizes: mp(size5, priceFactor), Extras: extrasAll}
 
-	size6 := []size{size{Name: "klein, 24 cm", Price: 750}, size{Name: "groß, 32 cm", Price: 920}, size{Name: "Family, 45x32 cm", Price: 1640}, size{Name: "Party, 60x40 cm", Price: 2050}}
+	size6 := []size{size{Name: "klein, 24 cm", Price: 750}, size{Name: "groß, 32 cm", Price: 960}, size{Name: "Family, 45x32 cm", Price: 1660}, size{Name: "Party, 60x40 cm", Price: 2150}}
 	pizza6 := menuItem{Name: "Pizza Samoa", Description: "mit Thunfisch, Zwiebelringen und Ananas", Sizes: mp(size6, priceFactor), Extras: extrasAll}
 
-	size7 := []size{size{Name: "klein, 24 cm", Price: 750}, size{Name: "groß, 32 cm", Price: 920}, size{Name: "Family, 45x32 cm", Price: 1640}, size{Name: "Party, 60x40 cm", Price: 2050}}
+	size7 := []size{size{Name: "klein, 24 cm", Price: 750}, size{Name: "groß, 32 cm", Price: 960}, size{Name: "Family, 45x32 cm", Price: 1660}, size{Name: "Party, 60x40 cm", Price: 2150}}
 	pizza7 := menuItem{Name: "Pizza Texas", Description: "mit Taco Beef, Jalapenos und Bohnen", Sizes: mp(size7, priceFactor), Extras: extrasAll}
 
-	size8 := []size{size{Name: "klein, 24 cm", Price: 800}, size{Name: "groß, 32 cm", Price: 980}, size{Name: "Family, 45x32 cm", Price: 1750}, size{Name: "Party, 60x40 cm", Price: 2230}}
+	size8 := []size{size{Name: "klein, 24 cm", Price: 800}, size{Name: "groß, 32 cm", Price: 1020}, size{Name: "Family, 45x32 cm", Price: 1770}, size{Name: "Party, 60x40 cm", Price: 2330}}
 	pizza8 := menuItem{Name: "Pizza Jazz", Description: "mit Schinken, Spargel, Tomaten und Barbecuesauce", Sizes: mp(size8, priceFactor), Extras: extrasAll}
 
-	size9 := []size{size{Name: "klein, 24 cm", Price: 800}, size{Name: "groß, 32 cm", Price: 980}, size{Name: "Family, 45x32 cm", Price: 1750}, size{Name: "Party, 60x40 cm", Price: 2230}}
+	size9 := []size{size{Name: "klein, 24 cm", Price: 800}, size{Name: "groß, 32 cm", Price: 1020}, size{Name: "Family, 45x32 cm", Price: 1770}, size{Name: "Party, 60x40 cm", Price: 2330}}
 	pizza9 := menuItem{Name: "Pizza Veggie", Description: "mit Broccoli, Tomaten, Paprika und Artischocken", Sizes: mp(size9, priceFactor), Extras: extrasAll}
 
-	size10 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
+	size10 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1080}, size{Name: "Family, 45x32 cm", Price: 1880}, size{Name: "Party, 60x40 cm", Price: 2510}}
 	pizza10 := menuItem{Name: "Pizza Capricciosa", Description: "mit Schinken, Salami, Oliven, Paprika und Zwiebeln", Sizes: mp(size10, priceFactor), Extras: extrasAll}
 
-	size11 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
+	size11 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1080}, size{Name: "Family, 45x32 cm", Price: 1880}, size{Name: "Party, 60x40 cm", Price: 2510}}
 	pizza11 := menuItem{Name: "Pizza Mexicana", Description: "mit Peperoniwurst, Speck, Taco Beef, Jalapenos und Zwiebeln", Sizes: mp(size11, priceFactor), Extras: extrasAll}
 
-	size12 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
+	size12 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1080}, size{Name: "Family, 45x32 cm", Price: 1880}, size{Name: "Party, 60x40 cm", Price: 2510}}
 	pizza12 := menuItem{Name: "Pizza Outback", Description: "mit Taco Beef, Schinken, Zwiebeln, Jalapenos und Ei", Sizes: mp(size12, priceFactor), Extras: extrasAll}
 
-	size13 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
+	size13 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1080}, size{Name: "Family, 45x32 cm", Price: 1880}, size{Name: "Party, 60x40 cm", Price: 2510}}
 	pizza13 := menuItem{Name: "Pizza Beverly Hills", Description: "mit Hühnerbrust, Taco Beef, Broccoli, Ananas und Barbecuesauce", Sizes: mp(size13, priceFactor), Extras: extrasAll}
 
-	size14 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1040}, size{Name: "Family, 45x32 cm", Price: 1860}, size{Name: "Party, 60x40 cm", Price: 2410}}
+	size14 := []size{size{Name: "klein, 24 cm", Price: 850}, size{Name: "groß, 32 cm", Price: 1080}, size{Name: "Family, 45x32 cm", Price: 1880}, size{Name: "Party, 60x40 cm", Price: 2510}}
 	pizza14 := menuItem{Name: "Pizza Speciale", Description: "mit Schinken, Salami, Champignons, Paprika und Ei", Sizes: mp(size14, priceFactor), Extras: extrasAll}
 
-	size15 := []size{size{Name: "klein, 24 cm", Price: 900}, size{Name: "groß, 32 cm", Price: 1100}, size{Name: "Family, 45x32 cm", Price: 1970}, size{Name: "Party, 60x40 cm", Price: 2590}}
+	size15 := []size{size{Name: "klein, 24 cm", Price: 900}, size{Name: "groß, 32 cm", Price: 1140}, size{Name: "Family, 45x32 cm", Price: 1990}, size{Name: "Party, 60x40 cm", Price: 2690}}
 	pizza15 := menuItem{Name: "Pizza Full House", Description: "mit Schinken, Peperoniwurst, Speck, Paprika, Peperoni und Ei", Sizes: mp(size15, priceFactor), Extras: extrasAll}
 
-	size16 := []size{size{Name: "klein, 24 cm", Price: 600}, size{Name: "groß, 32 cm", Price: 740}, size{Name: "Family, 45x32 cm", Price: 1310}, size{Name: "Party, 60x40 cm", Price: 1510}}
+	size16 := []size{size{Name: "klein, 24 cm", Price: 600}, size{Name: "groß, 32 cm", Price: 780}, size{Name: "Family, 45x32 cm", Price: 1310}, size{Name: "Party, 60x40 cm", Price: 1610}}
 	pizza16 := menuItem{Name: "Pizza Basic/Wunschpizza", Description: "mit Pizzasauce und Käse", Sizes: mp(size16, priceFactor), Extras: extrasAll}
 
 	json.NewEncoder(w).Encode([]menuItem{pizza1, pizza2, pizza3, pizza4, pizza5, pizza6, pizza7, pizza8, pizza9, pizza10, pizza11, pizza12, pizza13, pizza14, pizza15, pizza16})
