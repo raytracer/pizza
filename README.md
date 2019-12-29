@@ -1,4 +1,7 @@
 # pizza
+
+**DEPRECATED - USE https://github.com/olyro/pizza INSTEAD**
+
 The pizza order website for the OpenColloq@UniversityOfWuerzburg - https://wuecampus2.uni-wuerzburg.de/moodle/course/view.php?id=21049
 
 This service does not have session management, instead a secret link (the secret is specified in the config file) is used for the admin interface.
